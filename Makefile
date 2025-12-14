@@ -32,6 +32,7 @@ help:
 	@echo "  make build_c        - Build C library and test runner"
 	@echo "  make build_cpp      - Build C++ test runner"
 	@echo "  make build_python   - (No build needed)"
+	@echo "  make build_bash     - Build Bash CLI utility"
 	@echo ""
 	@echo "  make test_c         - Run C tests"
 	@echo "  make test_cpp       - Run C++ tests"
@@ -151,6 +152,17 @@ install_rust: check_c_installed
 	@echo "Add to your Cargo.toml: universal_timestamp = { path = 'wrappers/rust' }"
 	@echo "To check build: cd wrappers/rust && cargo build"
 
+build_bash: $(TARGET)
+	$(CC) $(CFLAGS) -Iinclude wrappers/bash/uts-cli.c -o wrappers/bash/uts-cli -Ldist -luniversal_timestamp
+
+test_bash: build_bash
+	wrappers/bash/test_bash.sh
+
+install_bash: build_bash
+	install -d $(DESTDIR)$(PREFIX)/bin
+	install -m 755 wrappers/bash/uts-cli $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 wrappers/bash/universal_timestamp.sh $(DESTDIR)$(PREFIX)/bin/
+
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/lib/libuniversal_timestamp.a
 	rm -f $(DESTDIR)$(PREFIX)/include/universal_timestamp.h
@@ -173,4 +185,4 @@ clean:
 	@echo "  make install_python_force - Install Python wrapper (break system packages)"
 	@echo "  make install_rust   - Show Rust install instructions"
 
-.PHONY: help build build_c build_cpp build_python test test_c test_cpp test_python test_rust test_all install_c install_cpp install_python install_python_force install_rust uninstall clean check_c_installed
+.PHONY: help build build_c build_cpp build_python build_bash test test_c test_cpp test_python test_rust test_bash test_all install_c install_cpp install_python install_python_force install_rust install_bash uninstall clean check_c_installed

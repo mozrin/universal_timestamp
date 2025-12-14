@@ -82,3 +82,6 @@ __pycache__/
 
 # C++ Wrapper
 test_cpp
+
+# Bash Wrapper
+/wrappers/bash/uts-cli
