@@ -8,7 +8,7 @@ The Universal Timestamp Library provides official wrappers for multiple programm
 |----------|-----------|--------|
 | [C++](wrapper_cpp.md) | `wrappers/cpp/` | ✅ Available |
 | [Python](wrapper_python.md) | `wrappers/python/` | ✅ Available |
-| Rust | `wrappers/rust/` | 🚧 Planned |
+| [Rust](wrapper_rust.md) | `wrappers/rust/` | ✅ Available |
 | Go | `wrappers/go/` | 🚧 Planned |
 
 ## Design Principles

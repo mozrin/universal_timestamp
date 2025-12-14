@@ -64,3 +64,21 @@ Makefile.cmake
 /latex/
 Doxyfile
 doxygen_sqlite3.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+/venv/
+/.venv/
+/wrappers/python/build/
+/wrappers/python/dist/
+/wrappers/python/*.egg-info/
+
+# Rust
+/wrappers/rust/target/
+/wrappers/rust/Cargo.lock
+
+# C++ Wrapper
+test_cpp

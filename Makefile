@@ -33,10 +33,10 @@ help:
 	@echo "  make build_cpp      - Build C++ test runner"
 	@echo "  make build_python   - (No build needed)"
 	@echo ""
-	@echo "Test:"
 	@echo "  make test_c         - Run C tests"
 	@echo "  make test_cpp       - Run C++ tests"
 	@echo "  make test_python    - Run Python tests"
+	@echo "  make test_rust      - Run Rust tests"
 	@echo "  make test_all       - Run all tests"
 	@echo ""
 	@echo "Install:"
@@ -44,7 +44,9 @@ help:
 	@echo "  make install_cpp    - Install C++ wrapper (includes C library)"
 	@echo "  make install_python - Install Python wrapper (pip install)"
 	@echo "  make install_python_force - Install Python wrapper (break system packages)"
+	@echo "  make install_rust   - Show Rust install instructions"
 	@echo ""
+
 	@echo "Other:"
 	@echo "  make clean          - Remove build artifacts"
 	@echo "  make uninstall      - Remove installed files"
@@ -93,11 +95,18 @@ test_c: $(TESTBIN)
 test_cpp: $(CPPTESTBIN)
 	./$(CPPTESTBIN)
 
-test_python: check_c_installed
-	@echo "Verifying Python wrapper import..."
-	cd wrappers/python && python3 -c "import universal_timestamp; print('Python wrapper OK')" || echo "Python wrapper failed to load"
+test_python: $(TARGET)
+	@echo "Verifying Python wrapper import (local)..."
+	export LD_LIBRARY_PATH=$(PWD)/dist:$(LD_LIBRARY_PATH) && \
+	cd wrappers/python && python3 -c "import universal_timestamp; print('Python wrapper OK')"
 
-test_all: test_c test_cpp test_python
+test_rust: $(TARGET)
+	@echo "Running Rust tests (local)..."
+	export LD_LIBRARY_PATH=$(PWD)/dist:$(LD_LIBRARY_PATH) && \
+	export LIBRARY_PATH=$(PWD)/dist:$(LIBRARY_PATH) && \
+	cd wrappers/rust && cargo test
+
+test_all: test_c test_cpp test_python test_rust
 
 test: test_all
 
@@ -137,6 +146,11 @@ install_python_force: check_c_installed
 	@echo "Installing Python wrapper (forcing --break-system-packages)..."
 	cd wrappers/python && (pip install . --break-system-packages || pip3 install . --break-system-packages)
 
+install_rust: check_c_installed
+	@echo "Rust wrapper is a library crate. No system install needed."
+	@echo "Add to your Cargo.toml: universal_timestamp = { path = 'wrappers/rust' }"
+	@echo "To check build: cd wrappers/rust && cargo build"
+
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/lib/libuniversal_timestamp.a
 	rm -f $(DESTDIR)$(PREFIX)/include/universal_timestamp.h
@@ -146,4 +160,17 @@ uninstall:
 clean:
 	rm -rf $(OBJDIR) $(DISTDIR)
 
-.PHONY: help build build_c build_cpp build_python test test_c test_cpp test_python test_all install_c install_cpp install_python install_python_force uninstall clean check_c_installed
+	@echo "  make test_c         - Run C tests"
+	@echo "  make test_cpp       - Run C++ tests"
+	@echo "  make test_python    - Run Python tests"
+	@echo "  make test_rust      - Run Rust tests"
+	@echo "  make test_all       - Run all tests"
+	@echo ""
+	@echo "Install:"
+	@echo "  make install_c      - Install C library only"
+	@echo "  make install_cpp    - Install C++ wrapper (includes C library)"
+	@echo "  make install_python - Install Python wrapper (pip install)"
+	@echo "  make install_python_force - Install Python wrapper (break system packages)"
+	@echo "  make install_rust   - Show Rust install instructions"
+
+.PHONY: help build build_c build_cpp build_python test test_c test_cpp test_python test_rust test_all install_c install_cpp install_python install_python_force install_rust uninstall clean check_c_installed
