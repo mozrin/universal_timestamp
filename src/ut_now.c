@@ -7,8 +7,17 @@
 #include <time.h>
 #include <stdatomic.h>
 
+#if defined(_WIN32) || defined(_WIN64)
+#define UT_WINDOWS 1
+#include <windows.h>
+#endif
+
 static atomic_int_fast64_t g_last_monotonic = ATOMIC_VAR_INIT(0);
 static ut_regression_callback_t g_regression_callback = NULL;
+
+/* Windows epoch (1601-01-01) to Unix epoch (1970-01-01) in 100-nanosecond intervals */
+static const int64_t WINDOWS_TICK = 10000000LL;
+static const int64_t WINDOWS_TO_UNIX_EPOCH = 11644473600LL;
 
 /**
  * @brief Get the current UTC timestamp.
@@ -16,7 +25,13 @@ static ut_regression_callback_t g_regression_callback = NULL;
 ut_timestamp_t ut_now(void) {
     ut_timestamp_t ts;
 
-#if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
+#if defined(UT_WINDOWS)
+    FILETIME ft;
+    GetSystemTimePreciseAsFileTime(&ft);
+    int64_t wintime = ((int64_t)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
+    int64_t unix_100ns = wintime - (WINDOWS_TO_UNIX_EPOCH * WINDOWS_TICK);
+    ts.nanos = unix_100ns * 100LL;
+#elif defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
     struct timespec spec;
     clock_gettime(CLOCK_REALTIME, &spec);
     ts.nanos = (int64_t)spec.tv_sec * 1000000000LL + spec.tv_nsec;
