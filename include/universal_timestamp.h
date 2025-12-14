@@ -1,7 +1,7 @@
 /**
  * @file universal_timestamp.h
  * @brief Universal Timestamp Library - Deterministic, cross-platform timestamps.
- * @version 1.0.0
+ * @version 0.9.0
  *
  * This library provides deterministic timestamp generation and parsing
  * conforming to the Universal Timestamp Specification (UTS).

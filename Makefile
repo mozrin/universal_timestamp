@@ -3,6 +3,7 @@ CFLAGS  = -std=c11 -Wall -Wextra -O2 -D_POSIX_C_SOURCE=199309L
 INCLUDE = -Iinclude -Isrc
 
 BUILDDIR = build
+DISTDIR  = dist
 PREFIX   = /usr/local
 
 SRC = \
@@ -14,9 +15,9 @@ SRC = \
 
 OBJ = $(patsubst src/%.c,$(BUILDDIR)/%.o,$(SRC))
 
-TARGET  = libuniversal_timestamp.a
-TESTBIN = test_runner
-PCFILE  = universal_timestamp.pc
+TARGET  = $(DISTDIR)/libuniversal_timestamp.a
+TESTBIN = $(DISTDIR)/test_runner
+PCFILE  = $(DISTDIR)/universal_timestamp.pc
 
 all: $(TARGET) $(TESTBIN)
 
@@ -29,13 +30,16 @@ $(BUILDDIR):
 $(BUILDDIR)/core:
 	mkdir -p $(BUILDDIR)/core
 
-$(TARGET): $(OBJ)
+$(DISTDIR):
+	mkdir -p $(DISTDIR)
+
+$(TARGET): $(OBJ) | $(DISTDIR)
 	ar rcs $(TARGET) $(OBJ)
 
-$(TESTBIN): test/test.c $(TARGET)
-	$(CC) $(CFLAGS) $(INCLUDE) test/test.c -o $(TESTBIN) -L. -l:$(TARGET)
+$(TESTBIN): test/test.c $(TARGET) | $(DISTDIR)
+	$(CC) $(CFLAGS) $(INCLUDE) test/test.c -o $(TESTBIN) -L$(DISTDIR) -l:libuniversal_timestamp.a
 
-$(PCFILE): universal_timestamp.pc.in
+$(PCFILE): universal_timestamp.pc.in | $(DISTDIR)
 	sed 's|@PREFIX@|$(PREFIX)|g' $< > $@
 
 test: $(TESTBIN)
@@ -50,11 +54,11 @@ install: $(TARGET) $(PCFILE)
 	install -m 644 $(PCFILE) $(DESTDIR)$(PREFIX)/lib/pkgconfig/
 
 uninstall:
-	rm -f $(DESTDIR)$(PREFIX)/lib/$(TARGET)
+	rm -f $(DESTDIR)$(PREFIX)/lib/libuniversal_timestamp.a
 	rm -f $(DESTDIR)$(PREFIX)/include/universal_timestamp.h
-	rm -f $(DESTDIR)$(PREFIX)/lib/pkgconfig/$(PCFILE)
+	rm -f $(DESTDIR)$(PREFIX)/lib/pkgconfig/universal_timestamp.pc
 
 clean:
-	rm -rf $(BUILDDIR) $(TARGET) $(TESTBIN) $(PCFILE)
+	rm -rf $(BUILDDIR) $(DISTDIR)
 
 .PHONY: all test install uninstall clean
