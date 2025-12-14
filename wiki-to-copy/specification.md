@@ -324,14 +324,30 @@ Implementations MUST NOT depend on:
 - Standard library integer/string ops  
 - Memory allocation  
 
-### 5.3 Recommended Time Sources
+### 5.3 Supported Platforms
 
-| Platform | API |
-|----------|-----|
-| POSIX | `clock_gettime(CLOCK_REALTIME)` |
-| Windows | `GetSystemTimePreciseAsFileTime()` |
-| JS | `Date.now()` (ms precision) |
-| Embedded | RTC |
+| Platform | Macro | API |
+|----------|-------|-----|
+| Windows | `UT_PLATFORM_WINDOWS` | `GetSystemTimePreciseAsFileTime()` |
+| macOS | `UT_PLATFORM_MACOS` | `clock_gettime()` |
+| iOS | `UT_PLATFORM_IOS` | `clock_gettime()` |
+| Linux | `UT_PLATFORM_LINUX` | `clock_gettime()` |
+| Android | `UT_PLATFORM_ANDROID` | `clock_gettime()` |
+| FreeBSD | `UT_PLATFORM_FREEBSD` | `clock_gettime()` |
+| OpenBSD | `UT_PLATFORM_OPENBSD` | `clock_gettime()` |
+| NetBSD | `UT_PLATFORM_NETBSD` | `clock_gettime()` |
+| DragonFly | `UT_PLATFORM_DRAGONFLY` | `clock_gettime()` |
+| Solaris | `UT_PLATFORM_SOLARIS` | `clock_gettime()` |
+| AIX | `UT_PLATFORM_AIX` | `clock_gettime()` |
+| HP-UX | `UT_PLATFORM_HPUX` | `clock_gettime()` |
+| QNX | `UT_PLATFORM_QNX` | `clock_gettime()` |
+| Haiku | `UT_PLATFORM_HAIKU` | `clock_gettime()` |
+| Cygwin | `UT_PLATFORM_CYGWIN` | `clock_gettime()` |
+| MinGW | `UT_PLATFORM_MINGW` | Windows API |
+| VxWorks | `UT_PLATFORM_VXWORKS` | `clock_gettime()` |
+| Fuchsia | `UT_PLATFORM_FUCHSIA` | `clock_gettime()` |
+| Emscripten | `UT_PLATFORM_EMSCRIPTEN` | `emscripten_get_now()` |
+| Fallback | — | `time()` |
 
 ---
 

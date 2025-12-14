@@ -3,6 +3,7 @@
  * @brief Implementation of ut_now() and ut_now_monotonic() functions.
  */
 
+
 #include "universal_timestamp.h"
 #include <time.h>
 #include <stdatomic.h>
@@ -80,6 +81,7 @@ static const int64_t WINDOWS_TO_UNIX_EPOCH = 11644473600LL;
 /**
  * @brief Get the current UTC timestamp.
  */
+
 ut_timestamp_t ut_now(void) {
     ut_timestamp_t ts;
 
@@ -109,6 +111,7 @@ ut_timestamp_t ut_now(void) {
 /**
  * @brief Get the current UTC timestamp with monotonic guarantee.
  */
+
 ut_timestamp_t ut_now_monotonic(void) {
     ut_timestamp_t current = ut_now();
 
@@ -136,6 +139,7 @@ ut_timestamp_t ut_now_monotonic(void) {
 /**
  * @brief Set a callback for clock regression events.
  */
+
 void ut_set_regression_callback(ut_regression_callback_t callback) {
     g_regression_callback = callback;
 }
@@ -143,6 +147,7 @@ void ut_set_regression_callback(ut_regression_callback_t callback) {
 /**
  * @brief Create a timestamp from Unix nanoseconds.
  */
+
 ut_timestamp_t ut_from_unix_nanos(int64_t nanos) {
     ut_timestamp_t ts = {nanos};
     return ts;
@@ -151,6 +156,7 @@ ut_timestamp_t ut_from_unix_nanos(int64_t nanos) {
 /**
  * @brief Convert a timestamp to Unix nanoseconds.
  */
+
 int64_t ut_to_unix_nanos(ut_timestamp_t ts) {
     return ts.nanos;
 }
@@ -158,6 +164,7 @@ int64_t ut_to_unix_nanos(ut_timestamp_t ts) {
 /**
  * @brief Get a human-readable error message.
  */
+
 const char *ut_error_string(ut_error_t err) {
     switch (err) {
         case UT_OK:                   return "Success";
@@ -175,6 +182,7 @@ const char *ut_error_string(ut_error_t err) {
 /**
  * @brief Get the calendar system used for date calculations.
  */
+
 ut_calendar_t ut_get_calendar(void) {
     return UT_CALENDAR_GREGORIAN;
 }
@@ -182,6 +190,7 @@ ut_calendar_t ut_get_calendar(void) {
 /**
  * @brief Detect the clock precision available on the current hardware.
  */
+
 ut_precision_t ut_get_clock_precision(void) {
     const int NUM_SAMPLES = 100;
     int64_t samples[100];

@@ -3,6 +3,7 @@
  * @brief Implementation of ut_parse_strict() and ut_parse_lenient() functions.
  */
 
+
 #include "universal_timestamp.h"
 #include "core/ut_internal.h"
 #include <string.h>
@@ -130,6 +131,7 @@ static ut_error_t parse_timestamp(const char *str, ut_timestamp_t *out, bool str
 /**
  * @brief Parse a timestamp string in strict mode.
  */
+
 ut_error_t ut_parse_strict(const char *str, ut_timestamp_t *out) {
     return parse_timestamp(str, out, true);
 }
@@ -137,6 +139,7 @@ ut_error_t ut_parse_strict(const char *str, ut_timestamp_t *out) {
 /**
  * @brief Parse a timestamp string in lenient mode.
  */
+
 ut_error_t ut_parse_lenient(const char *str, ut_timestamp_t *out) {
     return parse_timestamp(str, out, false);
 }

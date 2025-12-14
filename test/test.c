@@ -197,6 +197,128 @@ static void test_precision(void) {
     printf("  Detected precision: %d (0=ns, 1=us, 2=ms, 3=s)\n", prec);
 }
 
+static void test_edge_dates(void) {
+    printf("\n--- test_edge_dates ---\n");
+    
+    char buf[UT_MAX_STRING_LEN];
+    ut_timestamp_t ts;
+    ut_error_t err;
+    
+    ut_timestamp_t epoch = ut_from_unix_nanos(0);
+    ut_format(epoch, buf, sizeof(buf), false);
+    ASSERT_EQ_STR("unix epoch", buf, "1970-01-01T00:00:00Z");
+    
+    ut_timestamp_t before_epoch = ut_from_unix_nanos(-86400000000000LL);
+    ut_format(before_epoch, buf, sizeof(buf), false);
+    ASSERT_EQ_STR("day before epoch", buf, "1969-12-31T00:00:00Z");
+    
+    err = ut_parse_strict("1969-12-31T23:59:59Z", &ts);
+    ASSERT("parse before epoch", err == UT_OK);
+    ASSERT("before epoch negative", ts.nanos < 0);
+    
+    err = ut_parse_strict("2099-12-31T23:59:59Z", &ts);
+    ASSERT("parse far future", err == UT_OK);
+    
+    err = ut_parse_strict("0001-01-01T00:00:00Z", &ts);
+    ASSERT("parse year 1", err == UT_OK);
+}
+
+static void test_nanosecond_formats(void) {
+    printf("\n--- test_nanosecond_formats ---\n");
+    
+    ut_timestamp_t ts;
+    ut_error_t err;
+    
+    err = ut_parse_strict("2024-01-01T00:00:00.1Z", &ts);
+    ASSERT("1 digit fraction", err == UT_OK);
+    ASSERT_EQ_INT("1 digit = 100ms", ts.nanos % 1000000000LL, 100000000LL);
+    
+    err = ut_parse_strict("2024-01-01T00:00:00.12345Z", &ts);
+    ASSERT("5 digit fraction", err == UT_OK);
+    ASSERT_EQ_INT("5 digits", ts.nanos % 1000000000LL, 123450000LL);
+    
+    err = ut_parse_strict("2024-01-01T00:00:00.000000001Z", &ts);
+    ASSERT("9 digit fraction", err == UT_OK);
+    ASSERT_EQ_INT("1 nanosecond", ts.nanos % 1000000000LL, 1LL);
+    
+    err = ut_parse_strict("2024-01-01T00:00:00.1234567890Z", &ts);
+    ASSERT("10 digits rejected", err == UT_ERR_FRACTION_TOO_LONG);
+}
+
+static void test_japanese_era_boundaries(void) {
+    printf("\n--- test_japanese_era_boundaries ---\n");
+    
+    ut_timestamp_t ts;
+    ut_japanese_era_t era;
+    int era_year;
+    ut_error_t err;
+    
+    err = ut_parse_strict("2019-04-30T23:59:59Z", &ts);
+    ASSERT("parse heisei last day", err == UT_OK);
+    err = ut_to_japanese_era(ts, &era, &era_year);
+    ASSERT("heisei era", era == UT_ERA_HEISEI);
+    ASSERT_EQ_INT("heisei 31", era_year, 31);
+    
+    err = ut_parse_strict("2019-05-01T00:00:00Z", &ts);
+    ASSERT("parse reiwa first day", err == UT_OK);
+    err = ut_to_japanese_era(ts, &era, &era_year);
+    ASSERT("reiwa era", era == UT_ERA_REIWA);
+    ASSERT_EQ_INT("reiwa 1", era_year, 1);
+    
+    err = ut_parse_strict("1989-01-07T23:59:59Z", &ts);
+    ASSERT("parse showa last day", err == UT_OK);
+    err = ut_to_japanese_era(ts, &era, &era_year);
+    ASSERT("showa era", era == UT_ERA_SHOWA);
+}
+
+static void test_iso_week_boundaries(void) {
+    printf("\n--- test_iso_week_boundaries ---\n");
+    
+    ut_timestamp_t ts;
+    int y, w, d;
+    ut_error_t err;
+    
+    err = ut_parse_strict("2020-12-31T12:00:00Z", &ts);
+    ASSERT("parse 2020-12-31", err == UT_OK);
+    ut_to_iso_week(ts, &y, &w, &d);
+    ASSERT_EQ_INT("2020-12-31 is week 53", w, 53);
+    
+    err = ut_parse_strict("2021-01-04T12:00:00Z", &ts);
+    ASSERT("parse 2021-01-04", err == UT_OK);
+    ut_to_iso_week(ts, &y, &w, &d);
+    ASSERT_EQ_INT("2021-01-04 is week 1", w, 1);
+    ASSERT_EQ_INT("2021-01-04 is monday", d, 1);
+}
+
+static void test_error_conditions(void) {
+    printf("\n--- test_error_conditions ---\n");
+    
+    ut_error_t err;
+    ut_timestamp_t ts;
+    char buf[UT_MAX_STRING_LEN];
+    
+    err = ut_parse_strict(NULL, &ts);
+    ASSERT("null string rejected", err == UT_ERR_NULL_POINTER);
+    
+    err = ut_parse_strict("2024-01-01T00:00:00Z", NULL);
+    ASSERT("null output rejected", err == UT_ERR_NULL_POINTER);
+    
+    int result = ut_format(ts, NULL, sizeof(buf), false);
+    ASSERT("null buffer rejected", result == -1);
+    
+    result = ut_format(ts, buf, 10, false);
+    ASSERT("small buffer rejected", result == -1);
+    
+    err = ut_parse_strict("2024-13-01T00:00:00Z", &ts);
+    ASSERT("invalid month", err == UT_ERR_INVALID_DATE);
+    
+    err = ut_parse_strict("2024-01-32T00:00:00Z", &ts);
+    ASSERT("invalid day", err == UT_ERR_INVALID_DATE);
+    
+    err = ut_parse_strict("2024-01-01T25:00:00Z", &ts);
+    ASSERT("invalid hour", err == UT_ERR_OUT_OF_RANGE);
+}
+
 int main(void) {
     printf("Running universal_timestamp tests...\n");
     printf("=====================================\n");
@@ -211,6 +333,11 @@ int main(void) {
     test_error_strings();
     test_calendar();
     test_precision();
+    test_edge_dates();
+    test_nanosecond_formats();
+    test_japanese_era_boundaries();
+    test_iso_week_boundaries();
+    test_error_conditions();
 
     printf("\n=====================================\n");
     printf("Tests run: %d\n", tests_run);

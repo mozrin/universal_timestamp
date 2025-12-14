@@ -3,6 +3,7 @@
  * @brief Implementation of ut_format() function.
  */
 
+
 #include "universal_timestamp.h"
 #include "core/ut_internal.h"
 #include <stdio.h>
@@ -10,6 +11,7 @@
 /**
  * @brief Format a timestamp to an ISO-8601 string.
  */
+
  
 int ut_format(ut_timestamp_t ts, char *buf, size_t buf_size, bool include_nanos) {
     if (buf == NULL || buf_size < UT_MAX_STRING_LEN) {

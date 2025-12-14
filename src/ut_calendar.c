@@ -3,6 +3,7 @@
  * @brief Implementation of calendar conversion functions.
  */
 
+
 #include "universal_timestamp.h"
 #include "core/ut_internal.h"
 
@@ -13,6 +14,7 @@
 /**
  * @brief Convert Gregorian year to Thai Buddhist Era year.
  */
+
 int ut_gregorian_to_thai(int gregorian_year) {
     return gregorian_year + THAI_OFFSET;
 }
@@ -20,6 +22,7 @@ int ut_gregorian_to_thai(int gregorian_year) {
 /**
  * @brief Convert Thai Buddhist Era year to Gregorian year.
  */
+
 int ut_thai_to_gregorian(int thai_year) {
     return thai_year - THAI_OFFSET;
 }
@@ -27,6 +30,7 @@ int ut_thai_to_gregorian(int thai_year) {
 /**
  * @brief Convert Gregorian year to Korean Dangi year.
  */
+
 int ut_gregorian_to_dangi(int gregorian_year) {
     return gregorian_year + DANGI_OFFSET;
 }
@@ -34,6 +38,7 @@ int ut_gregorian_to_dangi(int gregorian_year) {
 /**
  * @brief Convert Korean Dangi year to Gregorian year.
  */
+
 int ut_dangi_to_gregorian(int dangi_year) {
     return dangi_year - DANGI_OFFSET;
 }
@@ -41,6 +46,7 @@ int ut_dangi_to_gregorian(int dangi_year) {
 /**
  * @brief Convert Gregorian year to Minguo (ROC) year.
  */
+
 int ut_gregorian_to_minguo(int gregorian_year) {
     return gregorian_year - MINGUO_OFFSET;
 }
@@ -48,6 +54,7 @@ int ut_gregorian_to_minguo(int gregorian_year) {
 /**
  * @brief Convert Minguo (ROC) year to Gregorian year.
  */
+
 int ut_minguo_to_gregorian(int minguo_year) {
     return minguo_year + MINGUO_OFFSET;
 }
@@ -71,6 +78,7 @@ static const struct {
 /**
  * @brief Get Japanese era and year for a given timestamp.
  */
+
 ut_error_t ut_to_japanese_era(ut_timestamp_t ts, ut_japanese_era_t *era, int *era_year) {
     if (era == NULL || era_year == NULL) {
         return UT_ERR_NULL_POINTER;
@@ -101,6 +109,7 @@ ut_error_t ut_to_japanese_era(ut_timestamp_t ts, ut_japanese_era_t *era, int *er
 /**
  * @brief Get the name of a Japanese era.
  */
+
 const char *ut_japanese_era_name(ut_japanese_era_t era) {
     for (size_t i = 0; i < NUM_ERAS; i++) {
         if (JAPANESE_ERAS[i].era == era) {
@@ -121,6 +130,7 @@ static int day_of_week_from_nanos(int64_t nanos) {
 /**
  * @brief Get ISO week date components from a timestamp.
  */
+
 void ut_to_iso_week(ut_timestamp_t ts, int *year, int *week, int *day) {
     if (year == NULL || week == NULL || day == NULL) {
         return;
@@ -132,37 +142,27 @@ void ut_to_iso_week(ut_timestamp_t ts, int *year, int *week, int *day) {
     int dow = day_of_week_from_nanos(ts.nanos);
     *day = dow + 1;
     
-    int jan1_nanos_approx = (int)(ut_internal_to_nanos(y, 1, 1, 0, 0, 0, 0) / 1000000000LL);
-    int jan1_dow = (int)(((jan1_nanos_approx / 86400) + 3) % 7);
-    if (jan1_dow < 0) jan1_dow += 7;
-    
     int day_of_year = 0;
     for (int i = 1; i < m; i++) {
         day_of_year += ut_internal_days_in_month(y, i);
     }
     day_of_year += d;
     
-    int week_num = (day_of_year - dow + 10) / 7;
+    int thursday_doy = day_of_year + (3 - dow);
     
-    if (week_num < 1) {
-        *year = y - 1;
-        int dec31_dow = (jan1_dow + 6) % 7;
-        if (dec31_dow == 3 || (dec31_dow == 4 && ut_internal_is_leap_year(y - 1))) {
-            *week = 53;
-        } else {
-            *week = 52;
-        }
-    } else if (week_num > 52) {
-        int dec31_dow = (jan1_dow + (ut_internal_is_leap_year(y) ? 365 : 364)) % 7;
-        if (dec31_dow == 3 || (dec31_dow == 2 && ut_internal_is_leap_year(y))) {
-            *year = y;
-            *week = 53;
-        } else {
-            *year = y + 1;
-            *week = 1;
-        }
+    int iso_year = y;
+    if (thursday_doy < 1) {
+        iso_year = y - 1;
+        int prev_year_days = ut_internal_is_leap_year(iso_year) ? 366 : 365;
+        thursday_doy += prev_year_days;
     } else {
-        *year = y;
-        *week = week_num;
+        int this_year_days = ut_internal_is_leap_year(y) ? 366 : 365;
+        if (thursday_doy > this_year_days) {
+            iso_year = y + 1;
+            thursday_doy -= this_year_days;
+        }
     }
+    
+    *year = iso_year;
+    *week = (thursday_doy + 6) / 7;
 }
