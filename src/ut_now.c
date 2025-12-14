@@ -7,17 +7,75 @@
 #include <time.h>
 #include <stdatomic.h>
 
+/* Platform detection */
 #if defined(_WIN32) || defined(_WIN64)
-#define UT_WINDOWS 1
-#include <windows.h>
+    #define UT_PLATFORM_WINDOWS 1
+    #include <windows.h>
+#elif defined(__EMSCRIPTEN__)
+    #define UT_PLATFORM_EMSCRIPTEN 1
+    #include <emscripten.h>
+#elif defined(__APPLE__) && defined(__MACH__)
+    #define UT_PLATFORM_APPLE 1
+    #include <TargetConditionals.h>
+    #if TARGET_OS_IPHONE
+        #define UT_PLATFORM_IOS 1
+    #else
+        #define UT_PLATFORM_MACOS 1
+    #endif
+#elif defined(__ANDROID__)
+    #define UT_PLATFORM_ANDROID 1
+#elif defined(__linux__)
+    #define UT_PLATFORM_LINUX 1
+#elif defined(__FreeBSD__)
+    #define UT_PLATFORM_FREEBSD 1
+#elif defined(__OpenBSD__)
+    #define UT_PLATFORM_OPENBSD 1
+#elif defined(__NetBSD__)
+    #define UT_PLATFORM_NETBSD 1
+#elif defined(__DragonFly__)
+    #define UT_PLATFORM_DRAGONFLY 1
+#elif defined(__sun) && defined(__SVR4)
+    #define UT_PLATFORM_SOLARIS 1
+#elif defined(_AIX)
+    #define UT_PLATFORM_AIX 1
+#elif defined(__hpux)
+    #define UT_PLATFORM_HPUX 1
+#elif defined(__QNX__) || defined(__QNXNTO__)
+    #define UT_PLATFORM_QNX 1
+#elif defined(__HAIKU__)
+    #define UT_PLATFORM_HAIKU 1
+#elif defined(__CYGWIN__)
+    #define UT_PLATFORM_CYGWIN 1
+#elif defined(__MINGW32__) || defined(__MINGW64__)
+    #define UT_PLATFORM_MINGW 1
+#elif defined(__vxworks)
+    #define UT_PLATFORM_VXWORKS 1
+#elif defined(__Fuchsia__)
+    #define UT_PLATFORM_FUCHSIA 1
+#endif
+
+/* POSIX availability check */
+#if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
+    #define UT_HAS_POSIX_CLOCK 1
+#elif defined(UT_PLATFORM_APPLE) || defined(UT_PLATFORM_LINUX) || \
+      defined(UT_PLATFORM_FREEBSD) || defined(UT_PLATFORM_OPENBSD) || \
+      defined(UT_PLATFORM_NETBSD) || defined(UT_PLATFORM_DRAGONFLY) || \
+      defined(UT_PLATFORM_ANDROID) || defined(UT_PLATFORM_SOLARIS) || \
+      defined(UT_PLATFORM_AIX) || defined(UT_PLATFORM_HPUX) || \
+      defined(UT_PLATFORM_QNX) || defined(UT_PLATFORM_HAIKU) || \
+      defined(UT_PLATFORM_CYGWIN) || defined(UT_PLATFORM_VXWORKS) || \
+      defined(UT_PLATFORM_FUCHSIA)
+    #define UT_HAS_POSIX_CLOCK 1
 #endif
 
 static atomic_int_fast64_t g_last_monotonic = ATOMIC_VAR_INIT(0);
 static ut_regression_callback_t g_regression_callback = NULL;
 
+#if defined(UT_PLATFORM_WINDOWS)
 /* Windows epoch (1601-01-01) to Unix epoch (1970-01-01) in 100-nanosecond intervals */
 static const int64_t WINDOWS_TICK = 10000000LL;
 static const int64_t WINDOWS_TO_UNIX_EPOCH = 11644473600LL;
+#endif
 
 /**
  * @brief Get the current UTC timestamp.
@@ -25,16 +83,22 @@ static const int64_t WINDOWS_TO_UNIX_EPOCH = 11644473600LL;
 ut_timestamp_t ut_now(void) {
     ut_timestamp_t ts;
 
-#if defined(UT_WINDOWS)
+#if defined(UT_PLATFORM_WINDOWS)
     FILETIME ft;
     GetSystemTimePreciseAsFileTime(&ft);
     int64_t wintime = ((int64_t)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
     int64_t unix_100ns = wintime - (WINDOWS_TO_UNIX_EPOCH * WINDOWS_TICK);
     ts.nanos = unix_100ns * 100LL;
-#elif defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
+
+#elif defined(UT_PLATFORM_EMSCRIPTEN)
+    double ms = emscripten_get_now();
+    ts.nanos = (int64_t)(ms * 1000000.0);
+
+#elif defined(UT_HAS_POSIX_CLOCK)
     struct timespec spec;
     clock_gettime(CLOCK_REALTIME, &spec);
     ts.nanos = (int64_t)spec.tv_sec * 1000000000LL + spec.tv_nsec;
+
 #else
     ts.nanos = (int64_t)time(NULL) * 1000000000LL;
 #endif
