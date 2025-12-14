@@ -31,15 +31,19 @@ help:
 	@echo "Build:"
 	@echo "  make build_c        - Build C library and test runner"
 	@echo "  make build_cpp      - Build C++ test runner"
+	@echo "  make build_python   - (No build needed)"
 	@echo ""
 	@echo "Test:"
-	@echo "  make test           - Run C tests"
-	@echo "  make cpp_test       - Run C++ tests"
+	@echo "  make test_c         - Run C tests"
+	@echo "  make test_cpp       - Run C++ tests"
+	@echo "  make test_python    - Run Python tests"
 	@echo "  make test_all       - Run all tests"
 	@echo ""
 	@echo "Install:"
 	@echo "  make install_c      - Install C library only"
 	@echo "  make install_cpp    - Install C++ wrapper (includes C library)"
+	@echo "  make install_python - Install Python wrapper (pip install)"
+	@echo "  make install_python_force - Install Python wrapper (break system packages)"
 	@echo ""
 	@echo "Other:"
 	@echo "  make clean          - Remove build artifacts"
@@ -49,10 +53,15 @@ build:
 	@echo "Please specify which library to build:"
 	@echo "  make build_c        - Build C library and test runner"
 	@echo "  make build_cpp      - Build C++ test runner"
+	@echo "  make build_python   - (No build needed for Python)"
 
 build_c: $(TARGET) $(TESTBIN)
 
 build_cpp: $(CPPTESTBIN)
+
+build_python:
+	@echo "Python wrapper is pure Python (ctypes). No build step required."
+	@echo "Run 'make install_python' to install."
 
 $(OBJDIR)/%.o: src/%.c | objdir objdir_core
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
@@ -78,13 +87,19 @@ $(CPPTESTBIN): wrappers/cpp/test_cpp.cpp $(TARGET) | distdir
 $(PCFILE): universal_timestamp.pc.in | distdir
 	sed 's|@PREFIX@|$(PREFIX)|g' $< > $@
 
-test: $(TESTBIN)
+test_c: $(TESTBIN)
 	./$(TESTBIN)
 
-cpp_test: $(CPPTESTBIN)
+test_cpp: $(CPPTESTBIN)
 	./$(CPPTESTBIN)
 
-test_all: test cpp_test
+test_python: check_c_installed
+	@echo "Verifying Python wrapper import..."
+	cd wrappers/python && python3 -c "import universal_timestamp; print('Python wrapper OK')" || echo "Python wrapper failed to load"
+
+test_all: test_c test_cpp test_python
+
+test: test_all
 
 install_c: $(TARGET) $(PCFILE)
 	install -d $(DESTDIR)$(PREFIX)/lib
@@ -94,8 +109,33 @@ install_c: $(TARGET) $(PCFILE)
 	install -m 644 include/universal_timestamp.h $(DESTDIR)$(PREFIX)/include/
 	install -m 644 $(PCFILE) $(DESTDIR)$(PREFIX)/lib/pkgconfig/
 
-install_cpp: install_c
+check_c_installed:
+	@if [ ! -f $(DESTDIR)$(PREFIX)/include/universal_timestamp.h ]; then \
+		echo "Error: C library not found!"; \
+		echo "Please run 'sudo make install_c' first."; \
+		exit 1; \
+	fi
+
+install_cpp: check_c_installed
 	install -m 644 wrappers/cpp/universal_timestamp.hpp $(DESTDIR)$(PREFIX)/include/
+
+install_python: check_c_installed
+	@if ! command -v pip >/dev/null 2>&1 && ! command -v pip3 >/dev/null 2>&1; then \
+		echo "Error: pip not found!"; \
+		echo "Please install pip (e.g., 'sudo apt install python3-pip') first."; \
+		exit 1; \
+	fi
+	@echo "Installing Python wrapper..."
+	@cd wrappers/python && pip install . 2>/dev/null || pip3 install . 2>/dev/null || \
+	(echo "\nError: Installation failed (likely PEP 668)."; \
+	 echo "To force installation (break system packages), run:"; \
+	 echo "  make install_python_force"; \
+	 echo "Or activate a virtual environment first."; \
+	 exit 1)
+
+install_python_force: check_c_installed
+	@echo "Installing Python wrapper (forcing --break-system-packages)..."
+	cd wrappers/python && (pip install . --break-system-packages || pip3 install . --break-system-packages)
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/lib/libuniversal_timestamp.a
@@ -106,4 +146,4 @@ uninstall:
 clean:
 	rm -rf $(OBJDIR) $(DISTDIR)
 
-.PHONY: help build build_c build_cpp test cpp_test test_all install_c install_cpp uninstall clean
+.PHONY: help build build_c build_cpp build_python test test_c test_cpp test_python test_all install_c install_cpp install_python install_python_force uninstall clean check_c_installed
