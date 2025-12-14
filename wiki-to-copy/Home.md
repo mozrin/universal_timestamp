@@ -1,5 +1,9 @@
 # Moztopia Universal Timestamp Library (C)
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ## About
 
 The Moztopia Universal Timestamp Library is a small, deterministic, zero‑dependency C implementation of the Universal Timestamp Specification (UTS).  

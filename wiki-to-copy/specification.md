@@ -94,6 +94,88 @@ Non‑zero offsets MUST be rejected in strict mode.
 
 ---
 
+### 2.4 Date Types
+
+All implementations MUST use the **proleptic Gregorian calendar** as the base for all date calculations. Additional Gregorian-derived calendars are supported for display and input purposes.
+
+#### 2.4.1 Supported Calendars
+
+| Calendar | Description | Year Offset | Status |
+|----------|-------------|-------------|--------|
+| `gregorian` | Proleptic Gregorian (ISO‑8601) | 0 | **Default** |
+| `thai` | Thai Solar Calendar (Buddhist Era) | +543 | Supported |
+| `dangi` | Korean Dangi Calendar | +2333 | Supported |
+| `minguo` | Minguo/ROC Calendar (Taiwan) | −1911 | Supported |
+| `japanese` | Japanese Era Calendar (Gengō) | Era-based | Supported |
+| `iso_week` | ISO week-date (YYYY-Www-D) | 0 | Supported |
+
+#### 2.4.2 Year Offset Calendars
+
+For `thai`, `dangi`, and `minguo`, the year is derived by applying an offset to the Gregorian year:
+
+```text
+thai_year    = gregorian_year + 543
+dangi_year   = gregorian_year + 2333
+minguo_year  = gregorian_year - 1911
+```
+
+**Examples:**
+
+- Gregorian 2024 = Thai 2567 = Dangi 4357 = Minguo 113
+
+#### 2.4.3 Japanese Era Calendar
+
+Japanese years are expressed as era name + year within era:
+
+| Era | Japanese | Start Date | Gregorian Start |
+|-----|----------|------------|-----------------|
+| Reiwa | 令和 | 2019-05-01 | 2019 |
+| Heisei | 平成 | 1989-01-08 | 1989 |
+| Shōwa | 昭和 | 1926-12-25 | 1926 |
+| Taishō | 大正 | 1912-07-30 | 1912 |
+| Meiji | 明治 | 1868-01-25 | 1868 |
+
+**Conversion:**
+
+```text
+gregorian_year = era_start_year + era_year - 1
+```
+
+**Example:** Reiwa 6 = 2019 + 6 - 1 = 2024
+
+#### 2.4.4 ISO Week Date
+
+The `iso_week` calendar represents dates as year-week-day:
+
+```text
+YYYY-Www-D
+```
+
+Where:
+
+- `YYYY` = ISO week-numbering year
+- `Www` = Week 01–53
+- `D` = Day 1–7 (Monday = 1)
+
+**Example:** `2024-W50-6` = Saturday of week 50, 2024 = 2024-12-14
+
+#### 2.4.5 Internal Representation
+
+All calendars share the same internal representation (nanoseconds since Unix epoch). Calendar type only affects parsing and formatting, not storage.
+
+#### 2.4.6 Unsupported Calendars
+
+The following are explicitly out of scope:
+
+- `julian` — Julian calendar (different leap year rules)
+- `hebrew` — Hebrew lunisolar calendar
+- `islamic` — Islamic lunar calendar
+- `chinese` — Chinese lunisolar calendar
+
+Implementations MUST reject these calendar types.
+
+---
+
 ## 3. Parsing Rules
 
 ### 3.1 Strict Mode
@@ -267,6 +349,7 @@ All implementations MUST provide:
 | `format(timestamp)` | Canonical formatting |
 | `fromUnixNanos(int64)` | Convert from epoch |
 | `toUnixNanos(timestamp)` | Convert to epoch |
+| `getClockPrecision()` | Detect hardware precision (0=ns, 1=µs, 2=ms, 3=s, -1=error) |
 
 ---
 
@@ -278,15 +361,15 @@ All implementations MUST provide:
 |------------|----------|
 | 0 | `1970-01-01T00:00:00Z` |
 | 1000000000000000000 | `2001-09-09T01:46:40Z` |
-| 1734147201123456789 | `2024-12-14T03:13:21.123456789Z` |
+| 1734146001123456789 | `2024-12-14T03:13:21.123456789Z` |
 
 #### Parsing (Strict)
 
 | Input | Valid | Unix nanos |
 |-------|-------|------------|
 | `1970-01-01T00:00:00Z` | ✓ | 0 |
-| `2024-12-14T03:13:21Z` | ✓ | 1734147201000000000 |
-| `2024-12-14T03:13:21.5Z` | ✓ | 1734147201500000000 |
+| `2024-12-14T03:13:21Z` | ✓ | 1734146001000000000 |
+| `2024-12-14T03:13:21.5Z` | ✓ | 1734146001500000000 |
 | `2024-12-14T03:13:21` | ✗ | — |
 | `2024-02-30T00:00:00Z` | ✗ | — |
 
@@ -294,8 +377,8 @@ All implementations MUST provide:
 
 | Input | Valid | Unix nanos |
 |-------|-------|------------|
-| `2024-12-14T03:13:21` | ✓ | 1734147201000000000 |
-| `2024-12-14T03:13:21+00:00` | ✓ | 1734147201000000000 |
+| `2024-12-14T03:13:21` | ✓ | 1734146001000000000 |
+| `2024-12-14T03:13:21+00:00` | ✓ | 1734146001000000000 |
 | `2024-02-30T00:00:00Z` | ✗ | — |
 
 #### Monotonic Sequence

@@ -1,0 +1,16 @@
+You are going to look at the specification and write this code. Note .. 
+
+the universal_timestamp.c is the core file.
+
+all public functions/method should me created separately in the same directory.
+all private functions/method should me created separately in the core/ directory.
+
+Basically .. if we are going to expose a function to the user, we should create 
+a separate file for it in the src/ directory. If it is a private function, we
+should create a separate file in the core/ directory.
+
+write the code ... provide docblocks that are useful for the user and linting
+software for all public functions. For private functions provide a basic 
+description of the methid/function. Never put any other comments in the code.
+
+Always put a blank line after the end of a comment block.
