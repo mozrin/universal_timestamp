@@ -107,7 +107,14 @@ test_rust: $(TARGET)
 	export LIBRARY_PATH=$(PWD)/dist:$(LIBRARY_PATH) && \
 	cd wrappers/rust && cargo test
 
-test_all: test_c test_cpp test_python test_rust
+test_go: $(TARGET)
+	@echo "Running Go tests..."
+	export CGO_CFLAGS="-I$(PWD)/include" && \
+	export CGO_LDFLAGS="-L$(PWD)/dist -l:libuniversal_timestamp.a" && \
+	cd wrappers/go && go test -v
+
+test_all: test_c test_cpp test_python test_rust test_go
+	cd wrappers/go && go test -v
 
 test: test_all
 

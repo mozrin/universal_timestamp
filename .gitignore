@@ -87,6 +87,10 @@ __pycache__/
 /wrappers/python/dist/
 /wrappers/python/*.egg-info/
 
+# Go
+/wrappers/go/go.sum
+/wrappers/go/universal_timestamp.test
+
 # Rust
 /wrappers/rust/target/
 /wrappers/rust/Cargo.lock

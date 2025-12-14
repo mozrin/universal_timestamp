@@ -15,6 +15,7 @@ A **deterministic, cross-platform timestamp library** for C with nanosecond prec
 - ✅ **Zero dependencies** — No locale, no timezone files
 - ✅ **6 calendar systems** — Gregorian, Thai, Dangi, Minguo, Japanese, ISO week
 - ✅ **20+ platforms** — Windows (PowerShell), macOS, Linux, BSD, Solaris, AIX, QNX, WASM, and more
+- ✅ **Wrappers** — C, C++, Python, Rust, Go, Bash
 
 ## Quick Start
 
