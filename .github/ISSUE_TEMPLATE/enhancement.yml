@@ -1,0 +1,24 @@
+name: Enhancement Request
+description: Suggest an improvement or a new feature.
+title: "[Enhancement]: "
+labels: [enhancement, needs-triage]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: What's the enhancement or improvement you're proposing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why is this needed? What problem does it solve?
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add links, references, or notes to help clarify your idea.

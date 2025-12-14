@@ -1,0 +1,30 @@
+name: Bug Report
+description: File a bug so we can squash it fast.
+title: "[Bug]: "
+labels: [bug, needs-triage]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened? What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Please list steps or commands to help us reproduce the issue.
+      placeholder: |
+        1. Go to '...'
+        2. Run '...'
+        3. Observe '...'
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or Branch
+      description: What

@@ -1,0 +1,18 @@
+name: Question
+description: Ask a question about how something works or why it is the way it is.
+title: "[Question]: "
+labels: [question, clarification]
+body:
+  - type: textarea
+    id: query
+    attributes:
+      label: Question
+      description: What's your question?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: If it's about code, tools, or behavior—give us a bit of background.
