@@ -15,6 +15,7 @@
 /bin/
 /lib/
 /dist/
+test_runner
 
 # Debug files
 *.dSYM/
@@ -53,8 +54,13 @@ CMakeFiles/
 cmake_install.cmake
 Makefile.cmake
 
-# pkg-config
+# pkg-config generated
 *.pc
+!*.pc.in
 
-# Documentation build
+# Documentation build (Doxygen)
 /docs/_build/
+/html/
+/latex/
+Doxyfile
+doxygen_sqlite3.db
