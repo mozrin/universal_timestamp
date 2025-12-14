@@ -27,6 +27,17 @@ test_runner
 *.gch
 *.pch
 
+# Test
+# Validations
+validation_results/
+validation_results_*.md
+
+# Windows
+*.exe
+*.obj
+wrappers/powershell/uts-cli.exe
+out
+
 # Dependency files
 *.d
 

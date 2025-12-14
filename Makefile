@@ -153,7 +153,7 @@ install_rust: check_c_installed
 	@echo "To check build: cd wrappers/rust && cargo build"
 
 build_bash: $(TARGET)
-	$(CC) $(CFLAGS) -Iinclude wrappers/bash/uts-cli.c -o wrappers/bash/uts-cli -Ldist -luniversal_timestamp
+	$(CC) $(CFLAGS) -Iinclude src/cli/uts_cli.c -o wrappers/bash/uts-cli -Ldist -luniversal_timestamp
 
 test_bash: build_bash
 	wrappers/bash/test_bash.sh
