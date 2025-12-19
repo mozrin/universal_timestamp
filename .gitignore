@@ -59,6 +59,9 @@ coverage/
 *~
 .DS_Store
 
+# wiki
+wiki
+
 # CMake
 CMakeCache.txt
 CMakeFiles/
